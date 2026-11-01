@@ -1,0 +1,208 @@
+CNC cell controller - recorded verification
+All times in traces are simulated. No physical hardware was used.
+
+Compiler: gcc (Debian 14.2.0-19) 14.2.0
+Command: CC=gcc sh code/run_tests.sh
+PASS  normal
+PASS  stale
+PASS  pose
+PASS  estop
+PASS  drive
+PASS  ack
+PASS  home
+PASS  runaway
+PASS  selfcheck
+PASS  home_pose
+PASS  grant
+PASS  grant_loss
+PASS  stuck
+PASS  notready
+PASS  inposition
+PASS  start_fault
+PASS  wrong_actor
+PASS  invalid CLI scenario rejected
+UNIT RESULT: 173 assertions passed
+17 simulation scenarios passed; CLI validation passed; regression assertions passed.
+
+Compiler: clang version 17.0.0 (https://github.com/swiftlang/llvm-project.git 10999b6d034fe318f3d56c83bddb6572593a8bb0)
+Command: CC=clang sh code/run_tests.sh
+PASS  normal
+PASS  stale
+PASS  pose
+PASS  estop
+PASS  drive
+PASS  ack
+PASS  home
+PASS  runaway
+PASS  selfcheck
+PASS  home_pose
+PASS  grant
+PASS  grant_loss
+PASS  stuck
+PASS  notready
+PASS  inposition
+PASS  start_fault
+PASS  wrong_actor
+PASS  invalid CLI scenario rejected
+UNIT RESULT: 173 assertions passed
+17 simulation scenarios passed; CLI validation passed; regression assertions passed.
+
+Sanitizer check: clang -std=c11 -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer code/test_controller.c -lm
+UNIT RESULT: 173 assertions passed
+No sanitizer diagnostics.
+
+Normal-cycle trace
+=== CNC cell controller, scenario: normal ===
+[  0.05s] STATE -> IDLE
+[  0.05s] INFO  Cell powered up. Position unknown, homing required.
+[  1.00s] INFO  Start accepted. Homing first.
+[  1.00s] STATE -> HOMING_APPROACH
+[  4.70s] INFO  Home sensor seen. Backing off.
+[  4.70s] STATE -> HOMING_BACKOFF
+[  5.20s] INFO  Backed off. Slow re-approach.
+[  5.20s] STATE -> HOMING_REAPPROACH
+[  7.30s] OK    Home latched. Position = 0.000 m. Normal moves enabled.
+[  7.30s] STATE -> MOVE_TRAY
+[  7.70s] STATE -> ROBOT_PICK
+[  7.70s] REQ   Request #101: PICK
+[  8.90s] OK    DONE #101 accepted.
+[  8.90s] STATE -> MOVE_CNC1
+[  9.90s] STATE -> CNC1_GRANT_LOAD
+[ 10.70s] STATE -> ROBOT_LOAD1
+[ 10.70s] REQ   Request #102: LOAD CNC1
+[ 11.90s] OK    DONE #102 accepted.
+[ 11.90s] STATE -> WAIT_CNC1
+[ 11.90s] REQ   Request #103: MACHINE CNC1
+[ 14.90s] OK    DONE #103 accepted.
+[ 14.90s] STATE -> CNC1_GRANT_UNLOAD
+[ 15.70s] STATE -> ROBOT_UNLOAD1
+[ 15.70s] REQ   Request #104: UNLOAD CNC1
+[ 16.90s] OK    DONE #104 accepted.
+[ 16.90s] STATE -> ROBOT_FLIP
+[ 16.90s] REQ   Request #105: FLIP
+[ 18.10s] OK    DONE #105 accepted.
+[ 18.10s] STATE -> MOVE_CNC2
+[ 19.50s] STATE -> CNC2_GRANT_LOAD
+[ 20.30s] STATE -> ROBOT_LOAD2
+[ 20.30s] REQ   Request #106: LOAD CNC2
+[ 21.50s] OK    DONE #106 accepted.
+[ 21.50s] STATE -> WAIT_CNC2
+[ 21.50s] REQ   Request #107: MACHINE CNC2
+[ 24.50s] OK    DONE #107 accepted.
+[ 24.50s] STATE -> CNC2_GRANT_UNLOAD
+[ 25.30s] STATE -> ROBOT_UNLOAD2
+[ 25.30s] REQ   Request #108: UNLOAD CNC2
+[ 26.50s] OK    DONE #108 accepted.
+[ 26.50s] STATE -> MOVE_OUTPUT
+[ 28.80s] STATE -> ROBOT_PLACE
+[ 28.80s] REQ   Request #109: PLACE
+[ 30.00s] OK    DONE #109 accepted.
+[ 30.00s] STATE -> CYCLE_DONE
+[ 30.00s] OK    Cycle complete: finished part is in the output tray.
+[ 30.05s] STATE -> IDLE
+RESULT: PASS (cycle complete, stationary in IDLE)
+
+Scenario: start_fault
+=== CNC cell controller, scenario: start_fault ===
+[  0.05s] STATE -> IDLE
+[  0.05s] INFO  Cell powered up. Position unknown, homing required.
+[  1.00s] INFO  Start accepted. Homing first.
+[  1.00s] STATE -> HOMING_APPROACH
+[  4.70s] INFO  Home sensor seen. Backing off.
+[  4.70s] STATE -> HOMING_BACKOFF
+[  5.20s] INFO  Backed off. Slow re-approach.
+[  5.20s] STATE -> HOMING_REAPPROACH
+[  7.30s] OK    Home latched. Position = 0.000 m. Normal moves enabled.
+[  7.30s] STATE -> MOVE_TRAY
+[  7.35s] INJ   E-stop pressed; Start held through Reset.
+[  7.35s] FAULT E-stop chain open. Motion stopped, new actions inhibited.
+[  8.40s] WARN  Reset refused: E-stop still pressed.
+[  9.40s] INJ   Operator clears fault; any manual repositioning is mocked.
+[  9.95s] OK    Reset done. Nothing moved. Press Start; gantry will re-home first.
+[  9.95s] STATE -> IDLE
+RESULT: PASS (fault handled; Reset held IDLE without motion)
+
+Scenario: selfcheck
+=== CNC cell controller, scenario: selfcheck ===
+[  0.05s] FAULT self-check failed (sensor sanity). Motion stopped, new actions inhibited.
+[  1.10s] WARN  Reset refused: drive not ready or an end limit is active.
+[  2.10s] INJ   Operator clears fault; any manual repositioning is mocked.
+[  2.65s] OK    Reset done. Nothing moved. Press Start; gantry will re-home first.
+[  2.65s] STATE -> IDLE
+RESULT: PASS (fault handled; Reset held IDLE without motion)
+
+Scenario: grant_loss
+=== CNC cell controller, scenario: grant_loss ===
+[  0.05s] STATE -> IDLE
+[  0.05s] INFO  Cell powered up. Position unknown, homing required.
+[  1.00s] INFO  Start accepted. Homing first.
+[  1.00s] STATE -> HOMING_APPROACH
+[  4.70s] INFO  Home sensor seen. Backing off.
+[  4.70s] STATE -> HOMING_BACKOFF
+[  5.20s] INFO  Backed off. Slow re-approach.
+[  5.20s] STATE -> HOMING_REAPPROACH
+[  7.30s] OK    Home latched. Position = 0.000 m. Normal moves enabled.
+[  7.30s] STATE -> MOVE_TRAY
+[  7.70s] STATE -> ROBOT_PICK
+[  7.70s] REQ   Request #101: PICK
+[  8.90s] OK    DONE #101 accepted.
+[  8.90s] STATE -> MOVE_CNC1
+[  9.90s] STATE -> CNC1_GRANT_LOAD
+[ 10.70s] STATE -> ROBOT_LOAD1
+[ 10.70s] REQ   Request #102: LOAD CNC1
+[ 11.05s] FAULT CNC access grant lost. Motion stopped, new actions inhibited.
+[ 12.10s] OK    Reset done. Nothing moved. Press Start; gantry will re-home first.
+[ 12.10s] STATE -> IDLE
+RESULT: PASS (fault handled; Reset held IDLE without motion)
+
+Scenario: home_pose
+=== CNC cell controller, scenario: home_pose ===
+[  0.05s] STATE -> IDLE
+[  0.05s] INFO  Cell powered up. Position unknown, homing required.
+[  1.00s] INFO  Start accepted. Homing first.
+[  1.00s] STATE -> HOMING_APPROACH
+[  1.05s] WARN  Move blocked: robot has not confirmed travel pose.
+[  8.75s] INFO  Home sensor seen. Backing off.
+[  8.75s] STATE -> HOMING_BACKOFF
+[  9.25s] INFO  Backed off. Slow re-approach.
+[  9.25s] STATE -> HOMING_REAPPROACH
+[ 11.35s] OK    Home latched. Position = 0.000 m. Normal moves enabled.
+[ 11.35s] STATE -> MOVE_TRAY
+[ 11.75s] STATE -> ROBOT_PICK
+[ 11.75s] REQ   Request #101: PICK
+[ 12.95s] OK    DONE #101 accepted.
+[ 12.95s] STATE -> MOVE_CNC1
+[ 13.95s] STATE -> CNC1_GRANT_LOAD
+[ 14.75s] STATE -> ROBOT_LOAD1
+[ 14.75s] REQ   Request #102: LOAD CNC1
+[ 15.95s] OK    DONE #102 accepted.
+[ 15.95s] STATE -> WAIT_CNC1
+[ 15.95s] REQ   Request #103: MACHINE CNC1
+[ 18.95s] OK    DONE #103 accepted.
+[ 18.95s] STATE -> CNC1_GRANT_UNLOAD
+[ 19.75s] STATE -> ROBOT_UNLOAD1
+[ 19.75s] REQ   Request #104: UNLOAD CNC1
+[ 20.95s] OK    DONE #104 accepted.
+[ 20.95s] STATE -> ROBOT_FLIP
+[ 20.95s] REQ   Request #105: FLIP
+[ 22.15s] OK    DONE #105 accepted.
+[ 22.15s] STATE -> MOVE_CNC2
+[ 23.55s] STATE -> CNC2_GRANT_LOAD
+[ 24.35s] STATE -> ROBOT_LOAD2
+[ 24.35s] REQ   Request #106: LOAD CNC2
+[ 25.55s] OK    DONE #106 accepted.
+[ 25.55s] STATE -> WAIT_CNC2
+[ 25.55s] REQ   Request #107: MACHINE CNC2
+[ 28.55s] OK    DONE #107 accepted.
+[ 28.55s] STATE -> CNC2_GRANT_UNLOAD
+[ 29.35s] STATE -> ROBOT_UNLOAD2
+[ 29.35s] REQ   Request #108: UNLOAD CNC2
+[ 30.55s] OK    DONE #108 accepted.
+[ 30.55s] STATE -> MOVE_OUTPUT
+[ 32.85s] STATE -> ROBOT_PLACE
+[ 32.85s] REQ   Request #109: PLACE
+[ 34.05s] OK    DONE #109 accepted.
+[ 34.05s] STATE -> CYCLE_DONE
+[ 34.05s] OK    Cycle complete: finished part is in the output tray.
+[ 34.10s] STATE -> IDLE
+RESULT: PASS (cycle complete, stationary in IDLE)
